@@ -1,0 +1,11 @@
+{
+    "display_name": "Pink Music",
+    "loading_order": 50,
+    "requires": [],
+    "optional": [],
+    "js": "pink-music-ui.js",
+    "css": "pink-music-ui.css",
+    "author": "Pink Music contributors",
+    "version": "0.2.0",
+    "homePage": ""
+}

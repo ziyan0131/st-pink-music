@@ -1,0 +1,225 @@
+/* Pink Music —— 三套主题:black / white / pink */
+#pm-root {
+    --pm-font: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
+    font-family: var(--pm-font);
+    -webkit-tap-highlight-color: transparent;
+}
+
+#pm-root[data-theme="black"] {
+    --bg: #0b0b0b; --glass: rgba(11, 11, 11, .80);
+    --fg: #f2f2f2; --sub: #8d8d8d; --line: #262626; --soft: #181818;
+    --accent: #f2f2f2; --accent-fg: #0b0b0b; --hi: #ffffff;
+    --shadow: 0 10px 30px rgba(0, 0, 0, .55);
+}
+#pm-root[data-theme="white"] {
+    --bg: #ffffff; --glass: rgba(255, 255, 255, .84);
+    --fg: #151515; --sub: #8a8a8a; --line: #e8e8e8; --soft: #f4f4f4;
+    --accent: #151515; --accent-fg: #ffffff; --hi: #151515;
+    --shadow: 0 10px 30px rgba(0, 0, 0, .16);
+}
+#pm-root[data-theme="pink"] {
+    --bg: #fff4f7; --glass: rgba(255, 244, 247, .86);
+    --fg: #3b2230; --sub: #b08a9a; --line: #f6d9e3; --soft: #ffe8ef;
+    --accent: #e8588a; --accent-fg: #ffffff; --hi: #e8588a;
+    --shadow: 0 10px 30px rgba(232, 88, 138, .22);
+}
+
+#pm-root *, #pm-root *::before, #pm-root *::after { box-sizing: border-box; }
+#pm-root button { font-family: inherit; }
+
+/* ---------- 悬浮球:封面唱片 + 进度环 ---------- */
+#pm-ball {
+    position: fixed; z-index: 5000;
+    width: 52px; height: 52px; left: 12px; top: 40%;
+    border-radius: 50%; cursor: pointer; touch-action: none; user-select: none;
+    background: var(--bg); box-shadow: var(--shadow);
+    transition: left .25s ease, opacity .2s;
+}
+#pm-ball.dragging { transition: none; }
+#pm-ball svg { position: absolute; inset: 0; transform: rotate(-90deg); pointer-events: none; }
+#pm-ball .pm-ring-bg { fill: none; stroke: var(--line); stroke-width: 2; }
+#pm-ball .pm-ring { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round; }
+#pm-ball .pm-disc {
+    position: absolute; inset: 6px; border-radius: 50%; overflow: hidden;
+    background: var(--accent) center / cover no-repeat;
+    display: grid; place-items: center; color: var(--accent-fg); font-size: 16px;
+    animation: pm-spin 14s linear infinite; animation-play-state: paused;
+}
+#pm-ball.playing .pm-disc { animation-play-state: running; }
+#pm-ball .pm-disc::after { /* 唱片中心孔 */
+    content: ""; position: absolute; width: 7px; height: 7px; border-radius: 50%;
+    background: var(--bg); box-shadow: 0 0 0 1px var(--line);
+}
+#pm-ball .pm-disc.has-cover .pm-note { display: none; }
+@keyframes pm-spin { to { transform: rotate(360deg); } }
+
+/* ---------- 面板 ---------- */
+#pm-panel {
+    position: fixed; z-index: 5001;
+    width: min(92vw, 340px); max-height: min(78vh, 580px);
+    display: none; flex-direction: column;
+    background: var(--bg); color: var(--fg);
+    border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow);
+    overflow: hidden; font-size: 14px;
+}
+#pm-panel.open { display: flex; }
+
+.pm-now { display: flex; gap: 12px; padding: 14px 14px 8px; align-items: center; }
+.pm-cover {
+    width: 56px; height: 56px; border-radius: 12px; flex: none;
+    background: var(--soft) center / cover no-repeat; border: 1px solid var(--line);
+}
+.pm-meta { min-width: 0; flex: 1; }
+.pm-title { font-size: 16px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pm-artist { color: var(--sub); font-size: 13px; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pm-close { border: 0; background: none; color: var(--sub); font-size: 22px; line-height: 1; padding: 4px 6px; cursor: pointer; }
+
+.pm-bar { padding: 4px 14px 0; }
+.pm-track { position: relative; height: 18px; display: flex; align-items: center; cursor: pointer; touch-action: none; }
+.pm-track::before { content: ""; flex: 1; height: 3px; border-radius: 2px; background: var(--line); }
+.pm-fill { position: absolute; left: 0; top: 50%; transform: translateY(-50%); height: 3px; border-radius: 2px; background: var(--accent); width: 0; pointer-events: none; }
+.pm-time { display: flex; justify-content: space-between; color: var(--sub); font-size: 12px; font-variant-numeric: tabular-nums; }
+
+.pm-ctrl { display: flex; align-items: center; justify-content: center; gap: 22px; padding: 6px 14px 10px; }
+.pm-btn {
+    border: 0; background: none; color: var(--fg); cursor: pointer;
+    width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center;
+}
+.pm-btn:hover { background: var(--soft); }
+.pm-btn svg { width: 20px; height: 20px; fill: currentColor; }
+.pm-btn.main { width: 46px; height: 46px; background: var(--accent); color: var(--accent-fg); }
+.pm-btn.main:hover { background: var(--accent); opacity: .9; }
+.pm-btn:focus-visible, .pm-tab:focus-visible, .pm-seg button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.pm-tabs { display: flex; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.pm-tab {
+    flex: 1; border: 0; background: none; color: var(--sub); padding: 10px 0; font-size: 14px; cursor: pointer;
+}
+.pm-tab.on { color: var(--fg); font-weight: 600; box-shadow: inset 0 -2px 0 var(--accent); }
+
+.pm-body { flex: 1; min-height: 160px; overflow-y: auto; padding: 12px 14px 14px; }
+.pm-hint { color: var(--sub); font-size: 13px; line-height: 1.6; }
+.pm-error { color: #d6456b; font-size: 13px; margin-top: 8px; line-height: 1.5; }
+#pm-root[data-theme="black"] .pm-error { color: #ff8da6; }
+
+.pm-row { display: flex; gap: 8px; margin-bottom: 10px; }
+.pm-input, .pm-textarea {
+    flex: 1; min-width: 0; border: 1px solid var(--line); background: var(--soft); color: var(--fg);
+    border-radius: 10px; padding: 9px 11px; font: inherit; font-size: 14px; outline: none;
+}
+.pm-input:focus, .pm-textarea:focus { border-color: var(--accent); }
+.pm-textarea { width: 100%; min-height: 70px; resize: vertical; }
+.pm-go {
+    border: 0; border-radius: 10px; padding: 0 14px; cursor: pointer;
+    background: var(--accent); color: var(--accent-fg); font-size: 14px;
+}
+.pm-ghost {
+    border: 1px solid var(--line); background: none; color: var(--fg);
+    border-radius: 10px; padding: 8px 12px; cursor: pointer; font-size: 13px;
+}
+.pm-seg { display: flex; background: var(--soft); border-radius: 10px; padding: 3px; margin-bottom: 10px; }
+.pm-seg button { flex: 1; border: 0; background: none; color: var(--sub); padding: 7px 0; border-radius: 8px; cursor: pointer; font-size: 13px; }
+.pm-seg button.on { background: var(--bg); color: var(--fg); box-shadow: 0 1px 3px rgba(0, 0, 0, .12); }
+
+.pm-item { display: flex; align-items: center; gap: 10px; padding: 8px 6px; border-radius: 10px; cursor: pointer; }
+.pm-item:hover, .pm-item.cur { background: var(--soft); }
+.pm-item.cur .pm-it { color: var(--hi); }
+.pm-item .pm-thumb { width: 38px; height: 38px; border-radius: 8px; background: var(--soft) center / cover; flex: none; }
+.pm-it { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pm-ia { font-size: 12px; color: var(--sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+
+.pm-card { border: 1px solid var(--line); border-radius: 14px; padding: 12px; margin-bottom: 12px; }
+.pm-card h4 { margin: 0 0 4px; font-size: 14px; font-weight: 600; }
+.pm-status { font-size: 13px; color: var(--sub); margin-bottom: 10px; }
+.pm-status.ok { color: var(--hi); }
+.pm-qr { display: block; width: 160px; height: 160px; margin: 8px auto; border-radius: 10px; background: #fff; padding: 6px; }
+
+.pm-set { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.pm-set:last-child { border-bottom: 0; }
+.pm-swatches { display: flex; gap: 10px; }
+.pm-sw { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--line); cursor: pointer; padding: 0; }
+.pm-sw.on { border-color: var(--accent); box-shadow: 0 0 0 2px var(--bg) inset; }
+.pm-sw[data-t="black"] { background: #0b0b0b; }
+.pm-sw[data-t="white"] { background: #ffffff; }
+.pm-sw[data-t="pink"] { background: #f7a9c4; }
+.pm-switch { width: 44px; height: 26px; border-radius: 13px; border: 0; background: var(--line); position: relative; cursor: pointer; transition: background .2s; }
+.pm-switch::after { content: ""; position: absolute; left: 3px; top: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--bg); transition: transform .2s; box-shadow: 0 1px 2px rgba(0, 0, 0, .3); }
+.pm-switch.on { background: var(--accent); }
+.pm-switch.on::after { transform: translateX(18px); }
+.pm-range { width: 130px; accent-color: var(--accent); }
+
+/* ---------- 悬浮歌词 ---------- */
+#pm-lyric {
+    position: fixed; z-index: 4999; left: 50%; top: 18%; transform: translateX(-50%);
+    max-width: 92vw; min-width: 160px; padding: 10px 20px; text-align: center;
+    background: var(--glass); color: var(--fg); border-radius: 16px;
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    box-shadow: var(--shadow); touch-action: none; user-select: none; display: none;
+    font-size: var(--pm-lyric-size, 20px); line-height: 1.4;
+}
+#pm-lyric.on { display: block; }
+#pm-lyric.locked { pointer-events: none; }
+#pm-lyric .pm-l1 { font-weight: 600; color: var(--hi); }
+#pm-lyric .pm-l2 { font-size: .64em; color: var(--sub); margin-top: 2px; min-height: 1em; }
+
+@media (prefers-reduced-motion: reduce) {
+    #pm-ball .pm-disc { animation: none; }
+    #pm-ball { transition: none; }
+}
+
+/* ---------- 悬浮歌词:多行(3 行)滚动 / 单行跑马灯 ---------- */
+#pm-lyric { width: min(92vw, 480px); }
+#pm-lyric .pm-multi, #pm-lyric .pm-single { display: none; }
+#pm-lyric[data-mode="multi"] .pm-multi { display: block; }
+#pm-lyric[data-mode="single"] .pm-single { display: block; }
+.pm-multi { height: calc(var(--pm-row, 38px) * 3); overflow: hidden; }
+.pm-roll { transition: transform .38s ease; }
+.pm-row-l {
+    height: var(--pm-row, 38px); line-height: var(--pm-row, 38px);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    color: var(--sub); opacity: .75; font-size: .86em;
+    transition: color .3s, font-size .3s, opacity .3s;
+}
+.pm-row-l.cur { color: var(--hi); opacity: 1; font-size: 1em; font-weight: 600; }
+.pm-single .pm-l1 { overflow: hidden; white-space: nowrap; text-align: center; }
+.pm-single .pm-l1 span { display: inline-block; }
+
+/* ---------- 歌单页 ---------- */
+.pm-grp { color: var(--sub); font-size: 12px; margin: 14px 0 4px; }
+.pm-pl-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.pm-pl-title { font-size: 16px; font-weight: 600; margin-bottom: 2px; }
+.pm-pl-head .pm-pl-title { margin: 0; }
+.pm-no { width: 28px; text-align: center; color: var(--sub); font-size: 12px; flex: none; font-variant-numeric: tabular-nums; }
+.pm-item.cur .pm-no { color: var(--hi); }
+.pm-more { width: 100%; margin-top: 8px; }
+.pm-color { width: 46px; height: 30px; border: 1px solid var(--line); border-radius: 8px; background: none; padding: 2px; cursor: pointer; }
+
+@media (prefers-reduced-motion: reduce) { .pm-roll, .pm-row-l { transition: none; } }
+
+/* ---------- 新增主题:淡粉白 / 淡蓝白 ---------- */
+#pm-root[data-theme="blush"] {
+    --bg: #ffffff; --glass: rgba(255, 255, 255, .86);
+    --fg: #2b2326; --sub: #a99aa0; --line: #f6e1e8; --soft: #fdf3f6;
+    --accent: #f4a6bf; --accent-fg: #4a1f30; --hi: #e0759b;
+    --shadow: 0 10px 30px rgba(244, 166, 191, .28);
+}
+#pm-root[data-theme="sky"] {
+    --bg: #ffffff; --glass: rgba(255, 255, 255, .86);
+    --fg: #1f2a33; --sub: #8fa0ad; --line: #dfeaf2; --soft: #f2f8fc;
+    --accent: #9fd0f0; --accent-fg: #17384f; --hi: #4a9fd6;
+    --shadow: 0 10px 30px rgba(110, 175, 220, .26);
+}
+.pm-sw[data-t="blush"] { background: linear-gradient(135deg, #f4a6bf 50%, #ffffff 50%); }
+.pm-sw[data-t="sky"] { background: linear-gradient(135deg, #9fd0f0 50%, #ffffff 50%); }
+
+/* ---------- 播放顺序 / 喜欢 ---------- */
+.pm-ctrl { gap: 12px; }
+.pm-btn.pm-mode { color: var(--sub); }
+.pm-btn.pm-like { color: var(--sub); }
+.pm-btn.pm-like.on { color: var(--hi); }
+.pm-heart {
+    margin-left: auto; flex: none; width: 36px; height: 36px; border: 0; background: none;
+    color: var(--sub); display: grid; place-items: center; cursor: pointer; border-radius: 50%;
+}
+.pm-heart svg { width: 18px; height: 18px; fill: currentColor; }
+.pm-heart.on { color: var(--hi); }
